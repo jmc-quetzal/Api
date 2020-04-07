@@ -1,23 +1,28 @@
 package main
 
 import (
-	"flag"
+	"github.com/jmc-quetzal/api/config"
+	"github.com/jmc-quetzal/api/routes"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
-	"github.com/jmc-quetzal/api/routes"
+	"os"
 )
 
-func home(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello from Quetzal"))
-}
-
 func main() {
-	r := routes.InitRouter()
-	addr := flag.String("addr",":4000","HTTP Network address")
-	flag.Parse()
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	log.Println("starting on :4000")
-	err := http.ListenAndServe(*addr,r)
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	config, err := config.ApplicationConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r := routes.InitRouter(config)
+	log.Println("Server starting on port", os.Getenv("PORT"))
+	err = http.ListenAndServe(os.Getenv("PORT"), r)
+
 	log.Fatal(err)
 }
